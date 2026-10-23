@@ -316,6 +316,39 @@
     <script>
         let breathInterval = null;
         let pendingBioId = null;
+        let refreshTimer = null;
+        const SESSION_KEY = 'rs_session';
+        const SESSION_HOURS = 12;
+        const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        /* ===== BANCO DE DADOS (IndexedDB) ===== */
+        const DB = {
+            db: null,
+            open() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open('rota_segura_db', 1);
+                    req.onupgradeneeded = () => req.result.createObjectStore('alerts', { keyPath: 'id', autoIncrement: true });
+                    req.onsuccess = () => { this.db = req.result; resolve(); };
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            run(mode, fn) {
+                return new Promise((resolve, reject) => {
+                    const req = fn(this.db.transaction('alerts', mode).objectStore('alerts'));
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            add(rec) { return this.run('readwrite', st => st.add(rec)); },
+            all() { return this.run('readonly', st => st.getAll()).then(r => r.sort((a, b) => b.id - a.id)); }
+        };
+
+        async function migrateLegacy() {
+            const old = JSON.parse(localStorage.getItem('rs_patients') || '[]');
+            if (!old.length) return;
+            for (const r of old.reverse()) await DB.add({ ...r, createdAt: Date.now() });
+            localStorage.removeItem('rs_patients');
+        }
 
         /* ===== ABERTURA ===== */
         function closeSplash() {
@@ -324,10 +357,17 @@
             s.classList.add('out');
             setTimeout(() => s.remove(), 700);
         }
-        window.addEventListener('load', () => setTimeout(closeSplash, 3000));
+        if (sessionStorage.getItem('rs_splash_done')) {
+            const sp = document.getElementById('splash');
+            if (sp) sp.remove();
+        } else {
+            sessionStorage.setItem('rs_splash_done', '1');
+            window.addEventListener('load', () => setTimeout(closeSplash, 3000));
+        }
 
         /* ===== ABAS ===== */
         function setTab(tab) {
+            sessionStorage.setItem('rs_tab', tab);
             document.getElementById('selfForm').classList.add('hidden');
             document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('registerForm').classList.add('hidden');
@@ -351,21 +391,25 @@
         }
 
         /* ===== AUTOATENDIMENTO ===== */
-        function doSelfRegister(e) {
+        async function doSelfRegister(e) {
             e.preventDefault();
             const checkedBoxes = Array.from(document.querySelectorAll('input[name="symptom"]:checked')).map(c => c.value);
-            const recs = JSON.parse(localStorage.getItem('rs_patients') || '[]');
-
-            recs.unshift({
-                time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+            const rec = {
+                createdAt: Date.now(),
+                time: new Date().toLocaleString('pt-BR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}),
                 name: document.getElementById('selfName').value,
                 role: document.getElementById('selfRole').value,
                 symptoms: checkedBoxes.length > 0 ? checkedBoxes.join(', ') : 'Desconforto não especificado',
                 location: document.getElementById('selfLocation').value,
                 notes: document.getElementById('selfNotes').value || 'Sem detalhes adicionais'
-            });
-
-            localStorage.setItem('rs_patients', JSON.stringify(recs));
+            };
+            try {
+                await DB.add(rec);
+            } catch (err) {
+                console.error(err);
+                alert('Não foi possível salvar o alerta neste aparelho. Tente novamente.');
+                return;
+            }
 
             document.getElementById('selfForm').classList.add('hidden');
             document.getElementById('selfHelpSuccess').classList.remove('hidden');
@@ -425,14 +469,19 @@
         }
 
         function showDashboard(user) {
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ name: user.name, pointType: user.pointType, at: Date.now() }));
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.remove('hidden');
             document.getElementById('userHeader').classList.remove('hidden');
             document.getElementById('userName').innerText = user.name;
             loadRecords();
+            clearInterval(refreshTimer);
+            refreshTimer = setInterval(loadRecords, 5000);
         }
 
         function logout() {
+            localStorage.removeItem(SESSION_KEY);
+            clearInterval(refreshTimer);
             document.getElementById('authSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('userHeader').classList.add('hidden');
@@ -502,8 +551,9 @@
         }
 
         /* ===== PAINEL ===== */
-        function loadRecords() {
-            const recs = JSON.parse(localStorage.getItem('rs_patients') || '[]');
+        async function loadRecords() {
+            let recs = [];
+            try { recs = await DB.all(); } catch (err) { console.error(err); }
             const tbody = document.getElementById('recordsBody');
             document.getElementById('statTotal').innerText = recs.length;
             document.getElementById('statAnxiety').innerText = recs.length;
@@ -515,15 +565,28 @@
 
             tbody.innerHTML = recs.map(r => `
                 <tr>
-                    <td>${r.time}</td>
-                    <td><b>${r.name}</b></td>
-                    <td><span style="color:#34d399; font-weight:700;">${r.role || 'Cidadão'}</span></td>
-                    <td style="color:#ef4444; font-weight:600;">${r.symptoms}</td>
-                    <td>${r.location}</td>
-                    <td style="color:#cbd5e1;">${r.notes}</td>
+                    <td>${esc(r.time)}</td>
+                    <td><b>${esc(r.name)}</b></td>
+                    <td><span style="color:#34d399; font-weight:700;">${esc(r.role || 'Cidadão')}</span></td>
+                    <td style="color:#ef4444; font-weight:600;">${esc(r.symptoms)}</td>
+                    <td>${esc(r.location)}</td>
+                    <td style="color:#cbd5e1;">${esc(r.notes)}</td>
                 </tr>
             `).join('');
         }
+
+        /* ===== INICIALIZAÇÃO: abre o banco e restaura a sessão ===== */
+        (async function init() {
+            try { await DB.open(); await migrateLegacy(); } catch (err) { console.error('Banco indisponível:', err); }
+            let session = null;
+            try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) {}
+            if (session && Date.now() - session.at < SESSION_HOURS * 3600 * 1000) {
+                showDashboard(session);
+            } else {
+                localStorage.removeItem(SESSION_KEY);
+                setTab(sessionStorage.getItem('rs_tab') || 'self');
+            }
+        })();
     </script>
 </body>
 </html>
