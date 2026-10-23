@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rota Segura - Ponto de Apoio & Autoatendimento</title>
+
+    <!-- ================= COLE AQUI OS DADOS DO SEU SUPABASE (Project Settings > API) ================= -->
+    <script>
+        const SUPABASE_URL = 'https://nepjxthjikroacfjyjjc.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_HlqWdBsHmO1PAR7xcZ1siQ_aztCdZNa';
+    </script>
+    <!-- ================================================================================================ -->
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at top, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
@@ -134,6 +142,7 @@
         </div>
         <div id="userHeader" class="hidden" style="display: flex; align-items: center; gap: 8px;">
             <span id="userName" style="font-size: 11px; font-weight: 600; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+            <button id="btnEnableBio" class="hidden" onclick="registerBio()" style="background:#059669;color:#fff;border:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:11px;">Face ID</button>
             <button onclick="logout()" style="background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 11px;">Sair</button>
         </div>
     </header>
@@ -180,6 +189,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Para qual ponto de apoio?</label>
+                    <select id="selfAgent"><option value="">Qualquer ponto de apoio disponível</option></select>
+                </div>
+
+                <div class="form-group">
                     <label>O que você está sentindo agora?</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item"><input type="checkbox" name="symptom" value="Falta de Ar"> Falta de Ar</label>
@@ -218,8 +232,8 @@
             <!-- LOGIN AGENTE -->
             <form id="loginForm" class="hidden" onsubmit="doLogin(event)">
                 <div class="form-group">
-                    <label>CPF ou E-mail do Agente</label>
-                    <input type="text" id="loginUser" required placeholder="Digite seu CPF ou e-mail">
+                    <label>E-mail do Agente</label>
+                    <input type="email" id="loginUser" required placeholder="seu@email.com" autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label>Senha</label>
@@ -229,6 +243,7 @@
                 <button type="button" class="btn btn-secondary" onclick="loginBio()">
                     🔓 Entrar com Face ID / Biometria
                 </button>
+                <button type="button" id="btnBioOff" class="hidden" onclick="disableBio()" style="background:none;border:none;color:#64748b;font-size:11px;margin-top:10px;width:100%;cursor:pointer;">Desativar Face ID neste aparelho e sair</button>
             </form>
 
             <!-- CADASTRO AGENTE -->
@@ -261,16 +276,8 @@
                     </div>
                     <div class="form-group">
                         <label>Senha</label>
-                        <input type="password" id="regPass" required placeholder="••••••••">
+                        <input type="password" id="regPass" required minlength="6" placeholder="mín. 6 caracteres">
                     </div>
-                </div>
-
-                <div class="facial-box">
-                    <div>
-                        <div style="font-size: 11px; font-weight: 600;">Face ID / Biometria do aparelho</div>
-                        <div id="facialStatus" style="font-size: 10px; color: #f59e0b;">Pendente de ativação</div>
-                    </div>
-                    <button type="button" onclick="registerBio()" style="background: #059669; color: white; border: none; padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;">Ativar Face ID</button>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Cadastrar Agente</button>
@@ -313,53 +320,30 @@
         </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script>
-        let breathInterval = null;
-        let pendingBioId = null;
-        let refreshTimer = null;
-        const SESSION_KEY = 'rs_session';
-        const SESSION_HOURS = 12;
+        /* Configuração do Supabase: veja o início do arquivo (linhas SUPABASE_URL e SUPABASE_KEY) */
+        const sb = SUPABASE_URL.startsWith('http') ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+        let breathInterval = null, refreshTimer = null, channel = null, me = null;
+        const BIO_KEY = 'rs_bio', LOCK_KEY = 'rs_locked';
+        const $ = id => document.getElementById(id);
         const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-        /* ===== BANCO DE DADOS (IndexedDB) ===== */
-        const DB = {
-            db: null,
-            open() {
-                return new Promise((resolve, reject) => {
-                    const req = indexedDB.open('rota_segura_db', 1);
-                    req.onupgradeneeded = () => req.result.createObjectStore('alerts', { keyPath: 'id', autoIncrement: true });
-                    req.onsuccess = () => { this.db = req.result; resolve(); };
-                    req.onerror = () => reject(req.error);
-                });
-            },
-            run(mode, fn) {
-                return new Promise((resolve, reject) => {
-                    const req = fn(this.db.transaction('alerts', mode).objectStore('alerts'));
-                    req.onsuccess = () => resolve(req.result);
-                    req.onerror = () => reject(req.error);
-                });
-            },
-            add(rec) { return this.run('readwrite', st => st.add(rec)); },
-            all() { return this.run('readonly', st => st.getAll()).then(r => r.sort((a, b) => b.id - a.id)); }
-        };
-
-        async function migrateLegacy() {
-            const old = JSON.parse(localStorage.getItem('rs_patients') || '[]');
-            if (!old.length) return;
-            for (const r of old.reverse()) await DB.add({ ...r, createdAt: Date.now() });
-            localStorage.removeItem('rs_patients');
+        function needDb() {
+            if (sb) return true;
+            alert('Configure SUPABASE_URL e SUPABASE_KEY no início do script do arquivo.');
+            return false;
         }
 
         /* ===== ABERTURA ===== */
         function closeSplash() {
-            const s = document.getElementById('splash');
-            if (!s || s.classList.contains('out')) return;
-            s.classList.add('out');
-            setTimeout(() => s.remove(), 700);
+            const sp = $('splash');
+            if (!sp || sp.classList.contains('out')) return;
+            sp.classList.add('out');
+            setTimeout(() => sp.remove(), 700);
         }
         if (sessionStorage.getItem('rs_splash_done')) {
-            const sp = document.getElementById('splash');
-            if (sp) sp.remove();
+            const sp = $('splash'); if (sp) sp.remove();
         } else {
             sessionStorage.setItem('rs_splash_done', '1');
             window.addEventListener('load', () => setTimeout(closeSplash, 3000));
@@ -368,130 +352,141 @@
         /* ===== ABAS ===== */
         function setTab(tab) {
             sessionStorage.setItem('rs_tab', tab);
-            document.getElementById('selfForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('registerForm').classList.add('hidden');
-            document.getElementById('btnTabSelf').classList.remove('active');
-            document.getElementById('btnTabLogin').classList.remove('active');
-            document.getElementById('btnTabRegister').classList.remove('active');
-
-            if (tab === 'self') {
-                document.getElementById('selfForm').classList.remove('hidden');
-                document.getElementById('btnTabSelf').classList.add('active');
-                document.getElementById('titleText').innerText = "Portal Rota Segura";
-            } else if (tab === 'login') {
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('btnTabLogin').classList.add('active');
-                document.getElementById('titleText').innerText = "Acessar Rota Segura";
-            } else {
-                document.getElementById('registerForm').classList.remove('hidden');
-                document.getElementById('btnTabRegister').classList.add('active');
-                document.getElementById('titleText').innerText = "Cadastrar Novo Agente";
-            }
+            ['self', 'login', 'register'].forEach(t => {
+                $(t + 'Form').classList.toggle('hidden', t !== tab);
+                $('btnTab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+            });
+            $('titleText').innerText = { self: 'Portal Rota Segura', login: 'Acessar Rota Segura', register: 'Cadastrar Novo Agente' }[tab];
         }
 
-        /* ===== AUTOATENDIMENTO ===== */
+        /* ===== CIDADÃO: ENVIA CHAMADO PARA UM AGENTE ===== */
+        async function loadAgents() {
+            if (!sb) return;
+            const { data } = await sb.from('public_agents').select('id,name,point_type').order('name');
+            $('selfAgent').innerHTML = '<option value="">Qualquer ponto de apoio disponível</option>' +
+                (data || []).map(a => `<option value="${esc(a.id)}">${esc(a.name)} — ${esc(a.point_type)}</option>`).join('');
+        }
+
         async function doSelfRegister(e) {
             e.preventDefault();
-            const checkedBoxes = Array.from(document.querySelectorAll('input[name="symptom"]:checked')).map(c => c.value);
-            const rec = {
-                createdAt: Date.now(),
-                time: new Date().toLocaleString('pt-BR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}),
-                name: document.getElementById('selfName').value,
-                role: document.getElementById('selfRole').value,
-                symptoms: checkedBoxes.length > 0 ? checkedBoxes.join(', ') : 'Desconforto não especificado',
-                location: document.getElementById('selfLocation').value,
-                notes: document.getElementById('selfNotes').value || 'Sem detalhes adicionais'
-            };
-            try {
-                await DB.add(rec);
-            } catch (err) {
-                console.error(err);
-                alert('Não foi possível salvar o alerta neste aparelho. Tente novamente.');
-                return;
-            }
-
-            document.getElementById('selfForm').classList.add('hidden');
-            document.getElementById('selfHelpSuccess').classList.remove('hidden');
+            if (!needDb()) return;
+            const checked = Array.from(document.querySelectorAll('input[name="symptom"]:checked')).map(c => c.value);
+            const { error } = await sb.from('alerts').insert({
+                agent_id: $('selfAgent').value || null,
+                citizen_name: $('selfName').value,
+                role: $('selfRole').value,
+                symptoms: checked.length ? checked.join(', ') : 'Desconforto não especificado',
+                location: $('selfLocation').value,
+                notes: $('selfNotes').value || 'Sem detalhes adicionais'
+            });
+            if (error) { console.error(error); alert('Não foi possível enviar o alerta. Verifique a conexão e tente novamente.'); return; }
+            $('selfForm').classList.add('hidden');
+            $('selfHelpSuccess').classList.remove('hidden');
             startBreathCycle();
         }
 
         function startBreathCycle() {
-            const circle = document.getElementById('breathCircle');
+            const circle = $('breathCircle');
             let step = 0;
             breathInterval = setInterval(() => {
-                if (step === 0) {
-                    circle.innerText = "Inspire (4s)";
-                    circle.style.transform = "scale(1.25)";
-                    step = 1;
-                } else if (step === 1) {
-                    circle.innerText = "Segure (7s)";
-                    step = 2;
-                } else {
-                    circle.innerText = "Expire (8s)";
-                    circle.style.transform = "scale(0.85)";
-                    step = 0;
-                }
+                if (step === 0) { circle.innerText = "Inspire (4s)"; circle.style.transform = "scale(1.25)"; step = 1; }
+                else if (step === 1) { circle.innerText = "Segure (7s)"; step = 2; }
+                else { circle.innerText = "Expire (8s)"; circle.style.transform = "scale(0.85)"; step = 0; }
             }, 4000);
         }
 
-        /* ===== CADASTRO / LOGIN ===== */
-        function doRegister(e) {
+        /* ===== AGENTE: CADASTRO / LOGIN (contas no Supabase Auth) ===== */
+        async function doRegister(e) {
             e.preventDefault();
-            const user = {
-                name: document.getElementById('regName').value,
-                doc: document.getElementById('regDoc').value,
-                email: document.getElementById('regEmail').value,
-                pass: document.getElementById('regPass').value,
-                pointType: document.getElementById('regPointType').value,
-                bioId: pendingBioId
-            };
-            localStorage.setItem('rs_user_' + user.email, JSON.stringify(user));
-            pendingBioId = null;
-            alert('Agente cadastrado com sucesso!');
+            if (!needDb()) return;
+            const { error } = await sb.auth.signUp({
+                email: $('regEmail').value.trim(),
+                password: $('regPass').value,
+                options: { data: { name: $('regName').value, doc: $('regDoc').value, phone: $('regPhone').value, point_type: $('regPointType').value } }
+            });
+            if (error) { alert('Erro no cadastro: ' + error.message); return; }
+            alert('Cadastro enviado! Confirme o e-mail (se solicitado) e aguarde a aprovação do administrador para acessar os chamados.');
             setTab('login');
         }
 
-        function doLogin(e) {
+        async function doLogin(e) {
             e.preventDefault();
-            const u = document.getElementById('loginUser').value;
-            const p = document.getElementById('loginPass').value;
+            if (!needDb()) return;
+            const { error } = await sb.auth.signInWithPassword({ email: $('loginUser').value.trim(), password: $('loginPass').value });
+            if (error) { alert(/not confirmed/i.test(error.message) ? 'Confirme seu e-mail antes de entrar.' : 'E-mail ou senha incorretos.'); return; }
+            localStorage.removeItem(LOCK_KEY);
+            await enterPanel();
+        }
 
-            const saved = localStorage.getItem('rs_user_' + u);
-            if (saved) {
-                const userObj = JSON.parse(saved);
-                if (userObj.pass === p) {
-                    showDashboard(userObj);
-                    return;
-                }
+        async function enterPanel() {
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) return false;
+            const { data: ag } = await sb.from('agents').select('name,point_type,approved').eq('id', user.id).maybeSingle();
+            if (!ag || !ag.approved) {
+                alert('Seu cadastro ainda não foi aprovado pelo administrador.');
+                await sb.auth.signOut();
+                return false;
             }
-            showDashboard({ name: u || 'Agente Rota Segura', pointType: 'Ponto Móvel - Trailer' });
+            me = { id: user.id, email: user.email, ...ag };
+            $('authSection').classList.add('hidden');
+            $('dashboardSection').classList.remove('hidden');
+            $('userHeader').classList.remove('hidden');
+            $('userName').innerText = me.name;
+            updateBioUI();
+            await loadRecords();
+            if (channel) sb.removeChannel(channel);
+            channel = sb.channel('alerts-live').on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, loadRecords).subscribe();
+            clearInterval(refreshTimer);
+            refreshTimer = setInterval(loadRecords, 20000);
+            return true;
         }
 
-        function showDashboard(user) {
-            localStorage.setItem(SESSION_KEY, JSON.stringify({ name: user.name, pointType: user.pointType, at: Date.now() }));
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('dashboardSection').classList.remove('hidden');
-            document.getElementById('userHeader').classList.remove('hidden');
-            document.getElementById('userName').innerText = user.name;
-            loadRecords();
+        function showAuth() {
+            me = null;
             clearInterval(refreshTimer);
-            refreshTimer = setInterval(loadRecords, 5000);
-        }
-
-        function logout() {
-            localStorage.removeItem(SESSION_KEY);
-            clearInterval(refreshTimer);
-            document.getElementById('authSection').classList.remove('hidden');
-            document.getElementById('dashboardSection').classList.add('hidden');
-            document.getElementById('userHeader').classList.add('hidden');
+            if (channel) { sb.removeChannel(channel); channel = null; }
             if (breathInterval) clearInterval(breathInterval);
+            $('authSection').classList.remove('hidden');
+            $('dashboardSection').classList.add('hidden');
+            $('userHeader').classList.add('hidden');
+            updateBioUI();
         }
 
-        /* ===== FACE ID / BIOMETRIA (WebAuthn) ===== */
+        async function logout() {
+            if (localStorage.getItem(BIO_KEY)) {      // com Face ID ativo, "Sair" apenas bloqueia o painel
+                localStorage.setItem(LOCK_KEY, '1');
+            } else {
+                await sb.auth.signOut();
+            }
+            showAuth();
+            setTab('login');
+        }
+
+        /* ===== PAINEL (chamados do agente logado, vindos do banco) ===== */
+        async function loadRecords() {
+            if (!me) return;
+            const { data, error } = await sb.from('alerts').select('*').order('created_at', { ascending: false });
+            if (error) console.error(error);
+            const recs = data || [];
+            $('statTotal').innerText = recs.length;
+            $('statAnxiety').innerText = recs.filter(r => r.status === 'novo').length;
+            $('recordsBody').innerHTML = recs.length ? recs.map(r => `
+                <tr>
+                    <td>${esc(new Date(r.created_at).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}))}</td>
+                    <td><b>${esc(r.citizen_name)}</b></td>
+                    <td><span style="color:#34d399; font-weight:700;">${esc(r.role || 'Cidadão')}</span></td>
+                    <td style="color:#ef4444; font-weight:600;">${esc(r.symptoms)}</td>
+                    <td>${esc(r.location)}</td>
+                    <td style="color:#cbd5e1;">${esc(r.notes)}</td>
+                </tr>`).join('')
+                : '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:15px;">Nenhum alerta recebido.</td></tr>';
+        }
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) loadRecords(); });
+
+        /* ===== FACE ID / BIOMETRIA (WebAuthn) — desbloqueia a sessão do aparelho ===== */
         const rnd = n => crypto.getRandomValues(new Uint8Array(n));
         const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        const fromB64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+        const fromB64 = v => Uint8Array.from(atob(v.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 
         function bioSupported() {
             if (!window.isSecureContext || !window.PublicKeyCredential) {
@@ -500,92 +495,69 @@
             }
             return true;
         }
+        function updateBioUI() {
+            const on = !!localStorage.getItem(BIO_KEY);
+            $('btnEnableBio').classList.toggle('hidden', on);
+            $('btnBioOff').classList.toggle('hidden', !on);
+        }
 
         async function registerBio() {
-            if (!bioSupported()) return;
-            const email = document.getElementById('regEmail').value.trim();
-            const name = document.getElementById('regName').value.trim();
-            if (!email || !name) { alert('Preencha o nome e o e-mail antes de ativar o Face ID.'); return; }
+            if (!bioSupported() || !me) return;
             try {
                 const cred = await navigator.credentials.create({ publicKey: {
                     challenge: rnd(32),
                     rp: { name: 'Rota Segura' },
-                    user: { id: rnd(16), name: email, displayName: name },
+                    user: { id: rnd(16), name: me.email, displayName: me.name },
                     pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
                     authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
-                    attestation: 'none',
-                    timeout: 60000
+                    attestation: 'none', timeout: 60000
                 }});
-                pendingBioId = toB64(cred.rawId);
-                const st = document.getElementById('facialStatus');
-                st.innerText = 'Face ID ativado ✔';
-                st.style.color = '#34d399';
+                localStorage.setItem(BIO_KEY, JSON.stringify({ id: toB64(cred.rawId), userId: me.id }));
+                updateBioUI();
+                alert('Face ID ativado neste aparelho.');
             } catch (err) {
                 console.error(err);
-                alert(err.name === 'NotAllowedError'
-                    ? 'Biometria cancelada ou não autorizada.'
-                    : 'Não foi possível ativar o Face ID neste aparelho. Verifique se ele está configurado nos ajustes do celular.');
+                alert(err.name === 'NotAllowedError' ? 'Biometria cancelada ou não autorizada.' : 'Não foi possível ativar o Face ID neste aparelho.');
             }
         }
 
         async function loginBio() {
-            if (!bioSupported()) return;
-            const users = Object.keys(localStorage)
-                .filter(k => k.startsWith('rs_user_'))
-                .map(k => JSON.parse(localStorage.getItem(k)))
-                .filter(u => u.bioId);
-            if (!users.length) { alert('Nenhum agente com Face ID cadastrado neste aparelho. Cadastre primeiro na aba "Cadastrar Agente".'); return; }
+            if (!bioSupported() || !needDb()) return;
+            const bio = JSON.parse(localStorage.getItem(BIO_KEY) || 'null');
+            if (!bio) { alert('Entre uma vez com e-mail e senha e toque em "Face ID" no topo do painel para ativar neste aparelho.'); return; }
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session || session.user.id !== bio.userId) { alert('Sessão expirada. Entre com e-mail e senha para reativar o Face ID.'); return; }
             try {
-                const cred = await navigator.credentials.get({ publicKey: {
+                await navigator.credentials.get({ publicKey: {
                     challenge: rnd(32),
-                    allowCredentials: users.map(u => ({ type: 'public-key', id: fromB64(u.bioId), transports: ['internal'] })),
-                    userVerification: 'required',
-                    timeout: 60000
+                    allowCredentials: [{ type: 'public-key', id: fromB64(bio.id), transports: ['internal'] }],
+                    userVerification: 'required', timeout: 60000
                 }});
-                const id = toB64(cred.rawId);
-                showDashboard(users.find(u => u.bioId === id) || users[0]);
             } catch (err) {
                 console.error(err);
                 alert(err.name === 'NotAllowedError' ? 'Biometria cancelada ou não reconhecida.' : 'Erro ao validar o Face ID.');
-            }
-        }
-
-        /* ===== PAINEL ===== */
-        async function loadRecords() {
-            let recs = [];
-            try { recs = await DB.all(); } catch (err) { console.error(err); }
-            const tbody = document.getElementById('recordsBody');
-            document.getElementById('statTotal').innerText = recs.length;
-            document.getElementById('statAnxiety').innerText = recs.length;
-
-            if (recs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:15px;">Nenhum alerta recebido.</td></tr>';
                 return;
             }
-
-            tbody.innerHTML = recs.map(r => `
-                <tr>
-                    <td>${esc(r.time)}</td>
-                    <td><b>${esc(r.name)}</b></td>
-                    <td><span style="color:#34d399; font-weight:700;">${esc(r.role || 'Cidadão')}</span></td>
-                    <td style="color:#ef4444; font-weight:600;">${esc(r.symptoms)}</td>
-                    <td>${esc(r.location)}</td>
-                    <td style="color:#cbd5e1;">${esc(r.notes)}</td>
-                </tr>
-            `).join('');
+            localStorage.removeItem(LOCK_KEY);
+            await enterPanel();
         }
 
-        /* ===== INICIALIZAÇÃO: abre o banco e restaura a sessão ===== */
+        async function disableBio() {
+            localStorage.removeItem(BIO_KEY);
+            localStorage.removeItem(LOCK_KEY);
+            if (sb) await sb.auth.signOut();
+            showAuth();
+        }
+
+        /* ===== INICIALIZAÇÃO: restaura a sessão ao recarregar ===== */
         (async function init() {
-            try { await DB.open(); await migrateLegacy(); } catch (err) { console.error('Banco indisponível:', err); }
-            let session = null;
-            try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) {}
-            if (session && Date.now() - session.at < SESSION_HOURS * 3600 * 1000) {
-                showDashboard(session);
-            } else {
-                localStorage.removeItem(SESSION_KEY);
-                setTab(sessionStorage.getItem('rs_tab') || 'self');
+            updateBioUI();
+            loadAgents();
+            if (sb) {
+                const { data: { session } } = await sb.auth.getSession();
+                if (session && !localStorage.getItem(LOCK_KEY) && await enterPanel()) return;
             }
+            setTab(sessionStorage.getItem('rs_tab') || (localStorage.getItem(LOCK_KEY) ? 'login' : 'self'));
         })();
     </script>
 </body>
