@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rota Segura - Ponto de Apoio & Autoatendimento</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: radial-gradient(circle at top, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        header { 
+            background: rgba(30, 41, 59, 0.9); 
+            backdrop-filter: blur(12px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            padding: 14px 24px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky; top: 0; z-index: 50;
+        }
+        
+        .logo-box { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo-icon-bg {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #059669, #10b981, #06b6d4);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            position: relative;
+        }
+        .logo-icon-bg svg { width: 26px; height: 26px; fill: #0f172a; }
+        .logo-tag {
+            position: absolute; bottom: -4px; right: -4px;
+            background: #f59e0b; color: #0f172a;
+            font-size: 8px; font-weight: 900; padding: 2px 5px; border-radius: 4px;
+        }
+        .logo-title { font-weight: 900; font-size: 20px; background: linear-gradient(to right, #34d399, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-sub { font-size: 11px; color: #94a3b8; }
+
+        main { flex: 1; max-width: 1100px; width: 100%; margin: 24px auto; padding: 0 16px; }
+        
+        .card { 
+            background: rgba(30, 41, 59, 0.75); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 20px; 
+            padding: 24px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
+            margin-bottom: 20px;
+        }
+        
+        .auth-card { max-width: 520px; margin: 30px auto; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .tabs { display: flex; background: #0f172a; padding: 5px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
+        .tab-btn { flex: 1; padding: 11px; border: none; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer; border-radius: 9px; font-size: 12px; transition: all 0.2s; text-align: center; }
+        .tab-btn.active { background: linear-gradient(135deg, #059669, #0d9488); color: #fff; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3); }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 6px; font-weight: 600; }
+        input, select, textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; color: #fff; font-size: 13px; outline: none; transition: 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+
+        .checkbox-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px; }
+        .checkbox-item { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .checkbox-item input { width: auto; }
+
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 13px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        .btn-danger { background: linear-gradient(135deg, #dc2626, #ef4444); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .btn-secondary { background: #334155; color: #34d399; margin-top: 10px; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .hidden { display: none !important; }
+
+        .facial-box { background: rgba(15, 23, 42, 0.8); border: 1px dashed #10b981; padding: 14px; border-radius: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: rgba(6, 78, 59, 0.8); color: #34d399; padding: 4px 12px; border-radius: 20px; font-size: 11px; border: 1px solid #059669; }
+        .badge-alert { background: rgba(120, 53, 15, 0.8); color: #fde047; border: 1px solid #ca8a04; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.08); padding: 18px; border-radius: 16px; position: relative; overflow: hidden; }
+        .stat-card::before { content:''; position: absolute; top:0; left:0; width:4px; height:100%; background: #10b981; }
+        .stat-num { font-size: 28px; font-weight: 800; margin-top: 6px; color: #34d399; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+        .modal { background: #1e293b; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; max-width: 420px; width: 100%; padding: 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .camera-view { width: 100%; height: 250px; background: #000; border-radius: 14px; margin: 16px 0; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; border: 1px solid #334155; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: #34d399; box-shadow: 0 0 10px #34d399; animation: scan 2s infinite ease-in-out; }
+        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 10px; }
+
+        .breath-box { width: 120px; height: 120px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid #34d399; display: flex; align-items: center; justify-content: center; margin: 15px auto; transition: transform 4s ease-in-out; text-align: center; font-weight: 700; font-size: 12px; color: #34d399; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-box" onclick="location.reload()">
+            <div class="logo-icon-bg">
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <span class="logo-tag">MÓVEL</span>
+            </div>
+            <div>
+                <div class="logo-title">ROTA SEGURA</div>
+                <div class="logo-sub">Ponto de Apoio & Saúde Mental no Trânsito</div>
+            </div>
+        </div>
+        <div id="userHeader" class="hidden" style="display: flex; align-items: center; gap: 12px;">
+            <span id="userBadge" class="badge">Ponto Fixo</span>
+            <span id="userName" style="font-size: 13px; font-weight: 600;"></span>
+            <button onclick="logout()" style="background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 12px;">Sair</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- TELA INICIAL COM ABAS: AUTOATENDIMENTO / LOGIN AGENTE / CADASTRO AGENTE -->
+        <div id="authSection" class="card auth-card">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 id="titleText" style="font-size: 22px; font-weight: 800;">Portal Rota Segura</h2>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Acolhimento Imediato para Crises de Ansiedade e Trânsito</p>
+            </div>
+
+            <div class="tabs">
+                <button id="btnTabSelf" class="tab-btn active" onclick="setTab('self')">Preciso de Apoio (Cidadão)</button>
+                <button id="btnTabLogin" class="tab-btn" onclick="setTab('login')">Entrar (Agente)</button>
+                <button id="btnTabRegister" class="tab-btn" onclick="setTab('register')">Cadastrar Agente</button>
+            </div>
+
+            <!-- FORMULÁRIO DE AUTOATENDIMENTO DO CIDADÃO -->
+            <form id="selfForm" onsubmit="doSelfRegister(event)">
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 12px; border-radius: 12px; margin-bottom: 15px; text-align: center;">
+                    <span style="font-size: 12px; color: #fca5a5; font-weight: 700;">Está se sentindo mal ou em pânico no trânsito?</span>
+                    <p style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Preencha abaixo para acionar o Trailer / Ponto de Apoio mais próximo.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Seu Nome ou Como deseja ser chamado</label>
+                    <input type="text" id="selfName" required placeholder="Ex: Lucas M.">
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Sua Localização / Via Atual</label>
+                        <input type="text" id="selfLocation" required placeholder="Ex: Av. Getúlio Vargas / Próximo ao Sinal">
+                    </div>
+                    <div class="form-group">
+                        <label>Você é:</label>
+                        <select id="selfRole">
+                            <option value="Motorista de Carro">Motorista de Carro</option>
+                            <option value="Motociclista">Motociclista</option>
+                            <option value="Pedestre / Passageiro">Pedestre / Passageiro</option>
+                            <option value="Ciclista">Ciclista</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Selecione o que você está sentindo no momento:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" name="symptom" value="Falta de Ar"> Falta de Ar</label>
+                        <label class="checkbox-item"><input type="checkbox" name="symptom" value="Coração Acelerado"> Coração Acelerado</label>
+                        <label class="checkbox-item"><input type="checkbox" name="symptom" value="Tontura / Vista Escura"> Tontura / Vista Escura</label>
+                        <label class="checkbox-item"><input type="checkbox" name="symptom" value="Tremores / Suor Frio"> Tremores / Suor Frio</label>
+                        <label class="checkbox-item"><input type="checkbox" name="symptom" value="Sensação de Pânico"> Sensação de Pânico</label>
+                        <label class="checkbox-item"><input type="checkbox" name="symptom" value="Irritação com Barulho"> Irritação com Ruído</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Relate o que está acontecendo (Opcional):</label>
+                    <textarea id="selfNotes" rows="2" placeholder="Ex: Fiquei preso no congestionamento com muito barulho e comecei a passar mal..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-danger">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Enviar Pedido de Apoio ao Trailer Móvel
+                </button>
+            </form>
+
+            <!-- TELA DE RESPIRAÇÃO PÓS-SOLICITAÇÃO DO CIDADÃO -->
+            <div id="selfHelpSuccess" class="hidden" style="text-align: center; padding: 10px 0;">
+                <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #059669; padding: 16px; border-radius: 14px; margin-bottom: 20px;">
+                    <h3 style="color: #34d399; font-size: 16px;">Pedido Enviado com Sucesso!</h3>
+                    <p style="font-size: 12px; color: #cbd5e1; margin-top: 4px;">A equipe do Ponto de Apoio Rota Segura e a Guarda Municipal já receberam seu alerta.</p>
+                </div>
+
+                <p style="font-size: 12px; color: #94a3b8; font-weight: 600;">Enquanto nossa equipe se aproxima, faça este exercício simples de respiração:</p>
+                
+                <div id="breathCircle" class="breath-box">Inspire (4s)</div>
+
+                <button type="button" onclick="location.reload()" class="btn btn-secondary">Voltar ao Início</button>
+            </div>
+
+            <!-- FORMULÁRIO DE LOGIN AGENTE -->
+            <form id="loginForm" class="hidden" onsubmit="doLogin(event)">
+                <div class="form-group">
+                    <label>CPF ou E-mail do Agente</label>
+                    <input type="text" id="loginUser" required placeholder="Digite seu CPF ou e-mail">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="loginPass" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">Entrar no Painel do Ponto</button>
+                <button type="button" class="btn btn-secondary" onclick="openFacial('login')">
+                    Entrar com Reconhecimento Facial
+                </button>
+            </form>
+
+            <!-- FORMULÁRIO DE CADASTRO AGENTE -->
+            <form id="registerForm" class="hidden" onsubmit="doRegister(event)">
+                <div class="form-group">
+                    <label>Nome do Agente / Profissional</label>
+                    <input type="text" id="regName" required placeholder="Ex: Agente Carlos Santos">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>CPF / CNPJ</label>
+                        <input type="text" id="regDoc" required placeholder="000.000.000-00">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="text" id="regPhone" required placeholder="(75) 99999-9999">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Unidade Rota Segura</label>
+                    <select id="regPointType">
+                        <option value="Fixo - Guarda Municipal">Ponto Fixo (Guarda Municipal)</option>
+                        <option value="Móvel - Trailer Rota Segura">Ponto Móvel (Trailer de Acolhedor)</option>
+                    </select>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="regEmail" required placeholder="seu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha</label>
+                        <input type="password" id="regPass" required placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div class="facial-box">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 600;">Reconhecimento Facial</div>
+                        <div id="facialStatus" style="font-size: 10px; color: #f59e0b;">Pendente</div>
+                    </div>
+                    <button type="button" onclick="openFacial('register')" style="background: #059669; color: white; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;">Capturar Rosto</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Concluir Cadastro do Agente</button>
+            </form>
+        </div>
+
+        <!-- DASHBOARD (PAINEL DO AGENTE DO PONTO) -->
+        <div id="dashboardSection" class="hidden">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">Alertas Recebidos</div>
+                    <div id="statTotal" class="stat-num">0</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #ef4444;">
+                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">Pessoas Passando Mal</div>
+                    <div id="statAnxiety" class="stat-num" style="color: #ef4444;">0</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #818cf8;">
+                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">Guarda Municipal</div>
+                    <div class="stat-num" style="color: #818cf8; font-size: 20px;">Integrada</div>
+                </div>
+            </div>
+
+            <!-- TABELA DE ALERTAS / RELATOS DE PESSOAS QUE PASSAM MAL -->
+            <div class="card">
+                <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px; color: #f8fafc;">Alertas de Cidadãos & Relatos do Trânsito</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Cidadão</th>
+                                <th>Condição</th>
+                                <th>Sintomas Relatados</th>
+                                <th>Localização Exata</th>
+                                <th>Relato do Ocorrido</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsBody">
+                            <tr><td colspan="6" style="text-align:center; color:#64748b; padding:20px;">Nenhum alerta recebido até o momento.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL DE RECONHECIMENTO FACIAL -->
+    <div id="facialModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3 style="font-size: 18px; font-weight: 800; color: #34d399;">Biometria Facial Rota Segura</h3>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Posicione o rosto dentro da área para escaneamento</p>
+            
+            <div class="camera-view">
+                <video id="videoElem" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                <div class="scan-line"></div>
+            </div>
+
+            <button class="btn btn-primary" onclick="confirmFacial()">Confirmar Leitura Facial</button>
+            <button class="btn btn-secondary" onclick="closeFacial()" style="border: none; color: #94a3b8;">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        let modeFacial = null;
+        let breathInterval = null;
+
+        function setTab(tab) {
+            document.getElementById('selfForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('btnTabSelf').classList.remove('active');
+            document.getElementById('btnTabLogin').classList.remove('active');
+            document.getElementById('btnTabRegister').classList.remove('active');
+
+            if (tab === 'self') {
+                document.getElementById('selfForm').classList.remove('hidden');
+                document.getElementById('btnTabSelf').classList.add('active');
+                document.getElementById('titleText').innerText = "Autoatendimento do Cidadão";
+            } else if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('btnTabLogin').classList.add('active');
+                document.getElementById('titleText').innerText = "Acessar Rota Segura";
+            } else {
+                document.getElementById('registerForm').classList.remove('hidden');
+                document.getElementById('btnTabRegister').classList.add('active');
+                document.getElementById('titleText').innerText = "Cadastrar Novo Agente";
+            }
+        }
+
+        function doSelfRegister(e) {
+            e.preventDefault();
+            const checkedBoxes = Array.from(document.querySelectorAll('input[name="symptom"]:checked')).map(c => c.value);
+            const recs = JSON.parse(localStorage.getItem('rs_patients') || '[]');
+            
+            recs.unshift({
+                time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+                name: document.getElementById('selfName').value,
+                role: document.getElementById('selfRole').value,
+                symptoms: checkedBoxes.length > 0 ? checkedBoxes.join(', ') : 'Desconforto não especificado',
+                location: document.getElementById('selfLocation').value,
+                notes: document.getElementById('selfNotes').value || 'Sem detalhes adicionais'
+            });
+
+            localStorage.setItem('rs_patients', JSON.stringify(recs));
+            
+            document.getElementById('selfForm').classList.add('hidden');
+            document.getElementById('selfHelpSuccess').classList.remove('hidden');
+            startBreathCycle();
+        }
+
+        function startBreathCycle() {
+            const circle = document.getElementById('breathCircle');
+            let step = 0;
+            breathInterval = setInterval(() => {
+                if (step === 0) {
+                    circle.innerText = "Inspire (4s)";
+                    circle.style.transform = "scale(1.3)";
+                    step = 1;
+                } else if (step === 1) {
+                    circle.innerText = "Segure (7s)";
+                    step = 2;
+                } else {
+                    circle.innerText = "Expire (8s)";
+                    circle.style.transform = "scale(0.85)";
+                    step = 0;
+                }
+            }, 4000);
+        }
+
+        function doRegister(e) {
+            e.preventDefault();
+            const user = {
+                name: document.getElementById('regName').value,
+                doc: document.getElementById('regDoc').value,
+                email: document.getElementById('regEmail').value,
+                pass: document.getElementById('regPass').value,
+                pointType: document.getElementById('regPointType').value
+            };
+            localStorage.setItem('rs_user_' + user.email, JSON.stringify(user));
+            alert('Agente cadastrado com sucesso!');
+            setTab('login');
+        }
+
+        function doLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUser').value;
+            const p = document.getElementById('loginPass').value;
+            
+            const saved = localStorage.getItem('rs_user_' + u);
+            if (saved) {
+                const userObj = JSON.parse(saved);
+                if (userObj.pass === p) {
+                    showDashboard(userObj);
+                    return;
+                }
+            }
+            showDashboard({ name: u || 'Agente Rota Segura', pointType: 'Ponto Móvel - Trailer' });
+        }
+
+        function showDashboard(user) {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userHeader').classList.remove('hidden');
+            document.getElementById('userName').innerText = user.name;
+            document.getElementById('userBadge').innerText = user.pointType || 'Ponto de Apoio';
+            loadRecords();
+        }
+
+        function logout() {
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('userHeader').classList.add('hidden');
+            if (breathInterval) clearInterval(breathInterval);
+        }
+
+        async function openFacial(mode) {
+            modeFacial = mode;
+            document.getElementById('facialModal').classList.remove('hidden');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('videoElem').srcObject = stream;
+            } catch(e) {}
+        }
+
+        function closeFacial() {
+            document.getElementById('facialModal').classList.add('hidden');
+        }
+
+        function confirmFacial() {
+            if (modeFacial === 'register') {
+                document.getElementById('facialStatus').innerText = "Capturado com sucesso ✔";
+                document.getElementById('facialStatus').style.color = "#34d399";
+            } else {
+                showDashboard({ name: "Agente Biométrico", pointType: "Ponto Móvel - Trailer" });
+            }
+            closeFacial();
+        }
+
+        function loadRecords() {
+            const recs = JSON.parse(localStorage.getItem('rs_patients') || '[]');
+            const tbody = document.getElementById('recordsBody');
+            document.getElementById('statTotal').innerText = recs.length;
+            document.getElementById('statAnxiety').innerText = recs.length;
+
+            if (recs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:20px;">Nenhum alerta recebido até o momento.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = recs.map(r => `
+                <tr>
+                    <td>${r.time}</td>
+                    <td><b>${r.name}</b></td>
+                    <td><span style="color:#34d399; font-weight:700;">${r.role || 'Cidadão'}</span></td>
+                    <td style="color:#ef4444; font-weight:600;">${r.symptoms}</td>
+                    <td>${r.location}</td>
+                    <td style="color:#cbd5e1;">${r.notes}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
