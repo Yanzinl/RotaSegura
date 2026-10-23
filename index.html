@@ -280,6 +280,14 @@
                     </div>
                 </div>
 
+                <div class="facial-box">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 600;">Face ID / Impressão digital</div>
+                        <div id="facialStatus" style="font-size: 10px; color: #f59e0b;">Pendente de ativação</div>
+                    </div>
+                    <button type="button" onclick="registerBioPending()" style="background: #059669; color: white; border: none; padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;">Ativar</button>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Cadastrar Agente</button>
             </form>
         </div>
@@ -399,12 +407,17 @@
         async function doRegister(e) {
             e.preventDefault();
             if (!needDb()) return;
-            const { error } = await sb.auth.signUp({
+            const { data, error } = await sb.auth.signUp({
                 email: $('regEmail').value.trim(),
                 password: $('regPass').value,
                 options: { data: { name: $('regName').value, doc: $('regDoc').value, phone: $('regPhone').value, point_type: $('regPointType').value } }
             });
             if (error) { alert('Erro no cadastro: ' + error.message); return; }
+            if (pendingBio && data && data.user) {
+                localStorage.setItem(BIO_KEY, JSON.stringify({ id: pendingBio, userId: data.user.id }));
+                pendingBio = null;
+                updateBioUI();
+            }
             alert('Cadastro enviado! Confirme o e-mail (se solicitado) e aguarde a aprovação do administrador para acessar os chamados.');
             setTab('login');
         }
@@ -518,6 +531,29 @@
             } catch (err) {
                 console.error(err);
                 alert(err.name === 'NotAllowedError' ? 'Biometria cancelada ou não autorizada.' : 'Não foi possível ativar o Face ID neste aparelho.');
+            }
+        }
+
+        let pendingBio = null;
+        async function registerBioPending() {
+            if (!bioSupported()) return;
+            const email = $('regEmail').value.trim(), name = $('regName').value.trim();
+            if (!email || !name) { alert('Preencha o nome e o e-mail antes de ativar o Face ID / impressão digital.'); return; }
+            try {
+                const cred = await navigator.credentials.create({ publicKey: {
+                    challenge: rnd(32),
+                    rp: { name: 'Rota Segura' },
+                    user: { id: rnd(16), name: email, displayName: name },
+                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+                    attestation: 'none', timeout: 60000
+                }});
+                pendingBio = toB64(cred.rawId);
+                $('facialStatus').innerText = 'Ativado ✔';
+                $('facialStatus').style.color = '#34d399';
+            } catch (err) {
+                console.error(err);
+                alert(err.name === 'NotAllowedError' ? 'Biometria cancelada ou não autorizada.' : 'Não foi possível ativar a biometria neste aparelho.');
             }
         }
 
