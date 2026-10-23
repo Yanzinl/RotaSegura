@@ -2,97 +2,135 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rota Segura - Ponto de Apoio & Autoatendimento</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at top, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
         
+        /* Header Responsivo */
         header { 
-            background: rgba(30, 41, 59, 0.9); 
+            background: rgba(30, 41, 59, 0.95); 
             backdrop-filter: blur(12px); 
             border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-            padding: 14px 24px; 
+            padding: 12px 16px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             position: sticky; top: 0; z-index: 50;
         }
         
-        .logo-box { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo-box { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-icon-bg {
-            width: 44px; height: 44px;
+            width: 38px; height: 38px;
             background: linear-gradient(135deg, #059669, #10b981, #06b6d4);
-            border-radius: 14px;
+            border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
             position: relative;
+            flex-shrink: 0;
         }
-        .logo-icon-bg svg { width: 26px; height: 26px; fill: #0f172a; }
+        .logo-icon-bg svg { width: 22px; height: 22px; fill: #0f172a; }
         .logo-tag {
             position: absolute; bottom: -4px; right: -4px;
             background: #f59e0b; color: #0f172a;
-            font-size: 8px; font-weight: 900; padding: 2px 5px; border-radius: 4px;
+            font-size: 7px; font-weight: 900; padding: 1px 4px; border-radius: 4px;
         }
-        .logo-title { font-weight: 900; font-size: 20px; background: linear-gradient(to right, #34d399, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .logo-sub { font-size: 11px; color: #94a3b8; }
+        .logo-title { font-weight: 900; font-size: 17px; background: linear-gradient(to right, #34d399, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-sub { font-size: 10px; color: #94a3b8; }
 
-        main { flex: 1; max-width: 1100px; width: 100%; margin: 24px auto; padding: 0 16px; }
+        main { flex: 1; max-width: 1000px; width: 100%; margin: 12px auto; padding: 0 12px; }
         
+        /* Containers e Cards */
         .card { 
-            background: rgba(30, 41, 59, 0.75); 
+            background: rgba(30, 41, 59, 0.85); 
             backdrop-filter: blur(10px); 
             border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 20px; 
-            padding: 24px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
-            margin-bottom: 20px;
+            border-radius: 16px; 
+            padding: 18px 14px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4); 
+            margin-bottom: 16px;
         }
         
-        .auth-card { max-width: 520px; margin: 30px auto; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .tabs { display: flex; background: #0f172a; padding: 5px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
-        .tab-btn { flex: 1; padding: 11px; border: none; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer; border-radius: 9px; font-size: 12px; transition: all 0.2s; text-align: center; }
+        .auth-card { max-width: 480px; margin: 10px auto; border: 1px solid rgba(16, 185, 129, 0.2); }
+        
+        /* Abas Estilo Touch */
+        .tabs { display: flex; background: #0f172a; padding: 4px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #334155; gap: 4px; }
+        .tab-btn { flex: 1; padding: 10px 6px; border: none; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer; border-radius: 9px; font-size: 11px; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: linear-gradient(135deg, #059669, #0d9488); color: #fff; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3); }
 
-        .form-group { margin-bottom: 16px; }
-        label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 6px; font-weight: 600; }
-        input, select, textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; color: #fff; font-size: 13px; outline: none; transition: 0.2s; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 5px; font-weight: 600; }
+        input, select, textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; color: #fff; font-size: 14px; outline: none; transition: 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
 
-        .checkbox-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px; }
-        .checkbox-item { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .checkbox-item input { width: auto; }
+        .checkbox-group { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 6px; }
+        @media (min-width: 480px) {
+            .checkbox-group { grid-template-columns: 1fr 1fr; }
+        }
+        .checkbox-item { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .checkbox-item input { width: 18px; height: 18px; accent-color: #10b981; }
 
-        .btn { width: 100%; padding: 13px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 13px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        /* Botões Adaptados para Toque */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 13.5px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
         .btn-danger { background: linear-gradient(135deg, #dc2626, #ef4444); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
         .btn-secondary { background: #334155; color: #34d399; margin-top: 10px; border: 1px solid rgba(16, 185, 129, 0.3); }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .grid-mobile { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        @media (min-width: 600px) {
+            .grid-mobile { grid-template-columns: 1fr 1fr; }
+        }
+
         .hidden { display: none !important; }
 
-        .facial-box { background: rgba(15, 23, 42, 0.8); border: 1px dashed #10b981; padding: 14px; border-radius: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-        .badge { background: rgba(6, 78, 59, 0.8); color: #34d399; padding: 4px 12px; border-radius: 20px; font-size: 11px; border: 1px solid #059669; }
-        .badge-alert { background: rgba(120, 53, 15, 0.8); color: #fde047; border: 1px solid #ca8a04; }
+        .facial-box { background: rgba(15, 23, 42, 0.8); border: 1px dashed #10b981; padding: 12px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: rgba(6, 78, 59, 0.8); color: #34d399; padding: 4px 10px; border-radius: 20px; font-size: 10px; border: 1px solid #059669; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
-        .stat-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.08); padding: 18px; border-radius: 16px; position: relative; overflow: hidden; }
+        /* Dashboard Responsivo */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .stat-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.08); padding: 14px; border-radius: 14px; position: relative; overflow: hidden; }
         .stat-card::before { content:''; position: absolute; top:0; left:0; width:4px; height:100%; background: #10b981; }
-        .stat-num { font-size: 28px; font-weight: 800; margin-top: 6px; color: #34d399; }
+        .stat-num { font-size: 22px; font-weight: 800; margin-top: 4px; color: #34d399; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
-        .modal { background: #1e293b; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; max-width: 420px; width: 100%; padding: 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .camera-view { width: 100%; height: 250px; background: #000; border-radius: 14px; margin: 16px 0; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; border: 1px solid #334155; }
+        /* Camera Modal Otimizado */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 12px; z-index: 100; }
+        .modal { background: #1e293b; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; max-width: 380px; width: 100%; padding: 20px 16px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        .camera-view { 
+            width: 100%; 
+            aspect-ratio: 4/3; 
+            background: #000; 
+            border-radius: 14px; 
+            margin: 14px 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative; 
+            overflow: hidden; 
+            border: 2px solid #334155; 
+        }
+        .camera-view video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        
+        .face-frame {
+            position: absolute;
+            width: 170px;
+            height: 210px;
+            border: 2px dashed #34d399;
+            border-radius: 50%;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.5);
+            pointer-events: none;
+        }
         .scan-line { position: absolute; width: 100%; height: 2px; background: #34d399; box-shadow: 0 0 10px #34d399; animation: scan 2s infinite ease-in-out; }
-        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+        @keyframes scan { 0% { top: 15%; } 50% { top: 85%; } 100% { top: 15%; } }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-        th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 10px; }
+        /* Tabelas responsivas com rolagem suave */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; white-space: nowrap; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 9px; }
 
-        .breath-box { width: 120px; height: 120px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid #34d399; display: flex; align-items: center; justify-content: center; margin: 15px auto; transition: transform 4s ease-in-out; text-align: center; font-weight: 700; font-size: 12px; color: #34d399; }
+        .breath-box { width: 110px; height: 110px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid #34d399; display: flex; align-items: center; justify-content: center; margin: 15px auto; transition: transform 4s ease-in-out; text-align: center; font-weight: 700; font-size: 11px; color: #34d399; }
     </style>
 </head>
 <body>
@@ -105,46 +143,45 @@
             </div>
             <div>
                 <div class="logo-title">ROTA SEGURA</div>
-                <div class="logo-sub">Ponto de Apoio & Saúde Mental no Trânsito</div>
+                <div class="logo-sub">Apoio & Saúde Mental no Trânsito</div>
             </div>
         </div>
-        <div id="userHeader" class="hidden" style="display: flex; align-items: center; gap: 12px;">
-            <span id="userBadge" class="badge">Ponto Fixo</span>
-            <span id="userName" style="font-size: 13px; font-weight: 600;"></span>
-            <button onclick="logout()" style="background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 12px;">Sair</button>
+        <div id="userHeader" class="hidden" style="display: flex; align-items: center; gap: 8px;">
+            <span id="userName" style="font-size: 11px; font-weight: 600; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+            <button onclick="logout()" style="background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 11px;">Sair</button>
         </div>
     </header>
 
     <main>
-        <!-- TELA INICIAL COM ABAS: AUTOATENDIMENTO / LOGIN AGENTE / CADASTRO AGENTE -->
+        <!-- TELA INICIAL -->
         <div id="authSection" class="card auth-card">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h2 id="titleText" style="font-size: 22px; font-weight: 800;">Portal Rota Segura</h2>
-                <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Acolhimento Imediato para Crises de Ansiedade e Trânsito</p>
+            <div style="text-align: center; margin-bottom: 16px;">
+                <h2 id="titleText" style="font-size: 19px; font-weight: 800;">Portal Rota Segura</h2>
+                <p style="font-size: 11px; color: #94a3b8; margin-top: 3px;">Suporte e Acolhimento a Crises no Trânsito</p>
             </div>
 
             <div class="tabs">
-                <button id="btnTabSelf" class="tab-btn active" onclick="setTab('self')">Preciso de Apoio (Cidadão)</button>
+                <button id="btnTabSelf" class="tab-btn active" onclick="setTab('self')">Preciso de Apoio</button>
                 <button id="btnTabLogin" class="tab-btn" onclick="setTab('login')">Entrar (Agente)</button>
                 <button id="btnTabRegister" class="tab-btn" onclick="setTab('register')">Cadastrar Agente</button>
             </div>
 
             <!-- FORMULÁRIO DE AUTOATENDIMENTO DO CIDADÃO -->
             <form id="selfForm" onsubmit="doSelfRegister(event)">
-                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 12px; border-radius: 12px; margin-bottom: 15px; text-align: center;">
-                    <span style="font-size: 12px; color: #fca5a5; font-weight: 700;">Está se sentindo mal ou em pânico no trânsito?</span>
-                    <p style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Preencha abaixo para acionar o Trailer / Ponto de Apoio mais próximo.</p>
+                <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 12px; margin-bottom: 12px; text-align: center;">
+                    <span style="font-size: 11px; color: #fca5a5; font-weight: 700;">Passando mal ou com ansiedade no trânsito?</span>
+                    <p style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">Envie seus dados para acionar a equipe do Trailer Móvel.</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Seu Nome ou Como deseja ser chamado</label>
+                    <label>Seu Nome ou Apelido</label>
                     <input type="text" id="selfName" required placeholder="Ex: Lucas M.">
                 </div>
 
-                <div class="grid-2">
+                <div class="grid-mobile">
                     <div class="form-group">
-                        <label>Sua Localização / Via Atual</label>
-                        <input type="text" id="selfLocation" required placeholder="Ex: Av. Getúlio Vargas / Próximo ao Sinal">
+                        <label>Sua Localização Atual na Via</label>
+                        <input type="text" id="selfLocation" required placeholder="Ex: Av. Getúlio Vargas / Perto do Sinal">
                     </div>
                     <div class="form-group">
                         <label>Você é:</label>
@@ -158,7 +195,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Selecione o que você está sentindo no momento:</label>
+                    <label>O que você está sentindo agora?</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item"><input type="checkbox" name="symptom" value="Falta de Ar"> Falta de Ar</label>
                         <label class="checkbox-item"><input type="checkbox" name="symptom" value="Coração Acelerado"> Coração Acelerado</label>
@@ -170,31 +207,31 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Relate o que está acontecendo (Opcional):</label>
-                    <textarea id="selfNotes" rows="2" placeholder="Ex: Fiquei preso no congestionamento com muito barulho e comecei a passar mal..."></textarea>
+                    <label>Relate o que está ocorrendo (Opcional):</label>
+                    <textarea id="selfNotes" rows="2" placeholder="Ex: Fiquei preso no trânsito com muito barulho de buzinas..."></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-danger">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    Enviar Pedido de Apoio ao Trailer Móvel
+                    Acionar Ponto de Apoio Rota Segura
                 </button>
             </form>
 
-            <!-- TELA DE RESPIRAÇÃO PÓS-SOLICITAÇÃO DO CIDADÃO -->
-            <div id="selfHelpSuccess" class="hidden" style="text-align: center; padding: 10px 0;">
-                <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #059669; padding: 16px; border-radius: 14px; margin-bottom: 20px;">
-                    <h3 style="color: #34d399; font-size: 16px;">Pedido Enviado com Sucesso!</h3>
-                    <p style="font-size: 12px; color: #cbd5e1; margin-top: 4px;">A equipe do Ponto de Apoio Rota Segura e a Guarda Municipal já receberam seu alerta.</p>
+            <!-- TELA DE PÓS-SOLICITAÇÃO DO CIDADÃO -->
+            <div id="selfHelpSuccess" class="hidden" style="text-align: center; padding: 8px 0;">
+                <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #059669; padding: 14px; border-radius: 12px; margin-bottom: 16px;">
+                    <h3 style="color: #34d399; font-size: 15px;">Alerta Enviado!</h3>
+                    <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">A equipe do Trailer e a Guarda Municipal já foram notificadas.</p>
                 </div>
 
-                <p style="font-size: 12px; color: #94a3b8; font-weight: 600;">Enquanto nossa equipe se aproxima, faça este exercício simples de respiração:</p>
+                <p style="font-size: 11px; color: #94a3b8; font-weight: 600;">Faça este exercício de respiração enquanto aguarda:</p>
                 
                 <div id="breathCircle" class="breath-box">Inspire (4s)</div>
 
                 <button type="button" onclick="location.reload()" class="btn btn-secondary">Voltar ao Início</button>
             </div>
 
-            <!-- FORMULÁRIO DE LOGIN AGENTE -->
+            <!-- LOGIN AGENTE -->
             <form id="loginForm" class="hidden" onsubmit="doLogin(event)">
                 <div class="form-group">
                     <label>CPF ou E-mail do Agente</label>
@@ -204,19 +241,20 @@
                     <label>Senha</label>
                     <input type="password" id="loginPass" required placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn btn-primary">Entrar no Painel do Ponto</button>
+                <button type="submit" class="btn btn-primary">Entrar no Painel</button>
                 <button type="button" class="btn btn-secondary" onclick="openFacial('login')">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M9 3L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
                     Entrar com Reconhecimento Facial
                 </button>
             </form>
 
-            <!-- FORMULÁRIO DE CADASTRO AGENTE -->
+            <!-- CADASTRO AGENTE -->
             <form id="registerForm" class="hidden" onsubmit="doRegister(event)">
                 <div class="form-group">
-                    <label>Nome do Agente / Profissional</label>
+                    <label>Nome do Agente</label>
                     <input type="text" id="regName" required placeholder="Ex: Agente Carlos Santos">
                 </div>
-                <div class="grid-2">
+                <div class="grid-mobile">
                     <div class="form-group">
                         <label>CPF / CNPJ</label>
                         <input type="text" id="regDoc" required placeholder="000.000.000-00">
@@ -230,10 +268,10 @@
                     <label>Tipo de Unidade Rota Segura</label>
                     <select id="regPointType">
                         <option value="Fixo - Guarda Municipal">Ponto Fixo (Guarda Municipal)</option>
-                        <option value="Móvel - Trailer Rota Segura">Ponto Móvel (Trailer de Acolhedor)</option>
+                        <option value="Móvel - Trailer Rota Segura">Ponto Móvel (Trailer Acolhedor)</option>
                     </select>
                 </div>
-                <div class="grid-2">
+                <div class="grid-mobile">
                     <div class="form-group">
                         <label>E-mail</label>
                         <input type="email" id="regEmail" required placeholder="seu@email.com">
@@ -246,37 +284,32 @@
 
                 <div class="facial-box">
                     <div>
-                        <div style="font-size: 12px; font-weight: 600;">Reconhecimento Facial</div>
-                        <div id="facialStatus" style="font-size: 10px; color: #f59e0b;">Pendente</div>
+                        <div style="font-size: 11px; font-weight: 600;">Reconhecimento Facial</div>
+                        <div id="facialStatus" style="font-size: 10px; color: #f59e0b;">Pendente de captura</div>
                     </div>
-                    <button type="button" onclick="openFacial('register')" style="background: #059669; color: white; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;">Capturar Rosto</button>
+                    <button type="button" onclick="openFacial('register')" style="background: #059669; color: white; border: none; padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;">Capturar Rosto</button>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Concluir Cadastro do Agente</button>
+                <button type="submit" class="btn btn-primary">Cadastrar Agente</button>
             </form>
         </div>
 
-        <!-- DASHBOARD (PAINEL DO AGENTE DO PONTO) -->
+        <!-- DASHBOARD PAINEL -->
         <div id="dashboardSection" class="hidden">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">Alertas Recebidos</div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">Alertas Recebidos</div>
                     <div id="statTotal" class="stat-num">0</div>
                 </div>
                 <div class="stat-card" style="border-left-color: #ef4444;">
-                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">Pessoas Passando Mal</div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">Pessoas em Atendimento</div>
                     <div id="statAnxiety" class="stat-num" style="color: #ef4444;">0</div>
-                </div>
-                <div class="stat-card" style="border-left-color: #818cf8;">
-                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">Guarda Municipal</div>
-                    <div class="stat-num" style="color: #818cf8; font-size: 20px;">Integrada</div>
                 </div>
             </div>
 
-            <!-- TABELA DE ALERTAS / RELATOS DE PESSOAS QUE PASSAM MAL -->
             <div class="card">
-                <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px; color: #f8fafc;">Alertas de Cidadãos & Relatos do Trânsito</h3>
-                <div style="overflow-x: auto;">
+                <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 10px; color: #f8fafc;">Alertas e Relatos em Tempo Real</h3>
+                <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
@@ -289,7 +322,7 @@
                             </tr>
                         </thead>
                         <tbody id="recordsBody">
-                            <tr><td colspan="6" style="text-align:center; color:#64748b; padding:20px;">Nenhum alerta recebido até o momento.</td></tr>
+                            <tr><td colspan="6" style="text-align:center; color:#64748b; padding:15px;">Nenhum alerta recebido.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -297,18 +330,20 @@
         </div>
     </main>
 
-    <!-- MODAL DE RECONHECIMENTO FACIAL -->
+    <!-- MODAL DE RECONHECIMENTO FACIAL COM LEITOR DE CÂMERA -->
     <div id="facialModal" class="modal-overlay hidden">
         <div class="modal">
-            <h3 style="font-size: 18px; font-weight: 800; color: #34d399;">Biometria Facial Rota Segura</h3>
-            <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Posicione o rosto dentro da área para escaneamento</p>
+            <h3 style="font-size: 16px; font-weight: 800; color: #34d399;">Biometria Facial Rota Segura</h3>
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 3px;">Enquadre o rosto na marcação abaixo</p>
             
             <div class="camera-view">
-                <video id="videoElem" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                <video id="videoElem" autoplay playsinline muted></video>
+                <div class="face-frame"></div>
                 <div class="scan-line"></div>
+                <div id="cameraStatusText" style="position: absolute; bottom: 8px; font-size: 10px; background: rgba(0,0,0,0.7); color: #34d399; padding: 2px 8px; border-radius: 4px;">Iniciando Câmera...</div>
             </div>
 
-            <button class="btn btn-primary" onclick="confirmFacial()">Confirmar Leitura Facial</button>
+            <button class="btn btn-primary" onclick="confirmFacial()">Capturar e Validar Rosto</button>
             <button class="btn btn-secondary" onclick="closeFacial()" style="border: none; color: #94a3b8;">Cancelar</button>
         </div>
     </div>
@@ -316,6 +351,7 @@
     <script>
         let modeFacial = null;
         let breathInterval = null;
+        let activeStream = null;
 
         function setTab(tab) {
             document.getElementById('selfForm').classList.add('hidden');
@@ -328,7 +364,7 @@
             if (tab === 'self') {
                 document.getElementById('selfForm').classList.remove('hidden');
                 document.getElementById('btnTabSelf').classList.add('active');
-                document.getElementById('titleText').innerText = "Autoatendimento do Cidadão";
+                document.getElementById('titleText').innerText = "Portal Rota Segura";
             } else if (tab === 'login') {
                 document.getElementById('loginForm').classList.remove('hidden');
                 document.getElementById('btnTabLogin').classList.add('active');
@@ -367,7 +403,7 @@
             breathInterval = setInterval(() => {
                 if (step === 0) {
                     circle.innerText = "Inspire (4s)";
-                    circle.style.transform = "scale(1.3)";
+                    circle.style.transform = "scale(1.25)";
                     step = 1;
                 } else if (step === 1) {
                     circle.innerText = "Segure (7s)";
@@ -415,7 +451,6 @@
             document.getElementById('dashboardSection').classList.remove('hidden');
             document.getElementById('userHeader').classList.remove('hidden');
             document.getElementById('userName').innerText = user.name;
-            document.getElementById('userBadge').innerText = user.pointType || 'Ponto de Apoio';
             loadRecords();
         }
 
@@ -426,22 +461,35 @@
             if (breathInterval) clearInterval(breathInterval);
         }
 
+        /* RECONHECIMENTO FACIAL COM SUPORTE A CÂMERA DE CELULAR */
         async function openFacial(mode) {
             modeFacial = mode;
             document.getElementById('facialModal').classList.remove('hidden');
+            const video = document.getElementById('videoElem');
+            const statusText = document.getElementById('cameraStatusText');
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                document.getElementById('videoElem').srcObject = stream;
-            } catch(e) {}
+                activeStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
+                });
+                video.srcObject = activeStream;
+                statusText.innerText = "Rosto Detectado - Clique em Capturar";
+            } catch(e) {
+                statusText.innerText = "Câmera indisponível (Simulação ativa)";
+            }
         }
 
         function closeFacial() {
             document.getElementById('facialModal').classList.add('hidden');
+            if (activeStream) {
+                activeStream.getTracks().forEach(track => track.stop());
+                activeStream = null;
+            }
         }
 
         function confirmFacial() {
             if (modeFacial === 'register') {
-                document.getElementById('facialStatus').innerText = "Capturado com sucesso ✔";
+                document.getElementById('facialStatus').innerText = "Capturado com Sucesso ✔";
                 document.getElementById('facialStatus').style.color = "#34d399";
             } else {
                 showDashboard({ name: "Agente Biométrico", pointType: "Ponto Móvel - Trailer" });
@@ -456,7 +504,7 @@
             document.getElementById('statAnxiety').innerText = recs.length;
 
             if (recs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:20px;">Nenhum alerta recebido até o momento.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:15px;">Nenhum alerta recebido.</td></tr>';
                 return;
             }
 
