@@ -7,18 +7,33 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at top, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
-        
-        header { 
-            background: rgba(30, 41, 59, 0.95); 
-            backdrop-filter: blur(12px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-            padding: 12px 16px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+
+        /* ABERTURA */
+        #splash { position: fixed; inset: 0; z-index: 200; background: radial-gradient(circle at top, #1e293b, #0f172a); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: opacity .6s, visibility .6s; }
+        #splash.out { opacity: 0; visibility: hidden; }
+        .splash-logo { width: 96px; height: 96px; border-radius: 28px; background: linear-gradient(135deg, #059669, #10b981, #06b6d4); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(16, 185, 129, .45); animation: pop .8s cubic-bezier(.2, 1.4, .4, 1) both, beat 1.6s ease-in-out .8s infinite; }
+        .splash-logo svg { width: 52px; height: 52px; fill: #0f172a; }
+        .splash-title { font-size: 28px; font-weight: 900; letter-spacing: 3px; margin-top: 10px; background: linear-gradient(to right, #34d399, #67e8f9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: fadeUp .8s .4s both; }
+        .splash-sub { font-size: 12px; color: #94a3b8; animation: fadeUp .8s .7s both; }
+        .splash-bar { width: 140px; height: 3px; background: #334155; border-radius: 3px; overflow: hidden; margin-top: 22px; }
+        .splash-bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #34d399, #67e8f9); animation: load 2.6s ease-in-out forwards; }
+        .splash-skip { font-size: 10px; color: #64748b; margin-top: 6px; }
+        @keyframes pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes fadeUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes load { to { width: 100%; } }
+
+        header {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             position: sticky; top: 0; z-index: 50;
         }
-        
+
         .logo-box { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-icon-bg {
             width: 38px; height: 38px;
@@ -39,19 +54,19 @@
         .logo-sub { font-size: 10px; color: #94a3b8; }
 
         main { flex: 1; max-width: 1000px; width: 100%; margin: 12px auto; padding: 0 12px; }
-        
-        .card { 
-            background: rgba(30, 41, 59, 0.85); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 16px; 
-            padding: 18px 14px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4); 
+
+        .card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 18px 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
             margin-bottom: 16px;
         }
-        
+
         .auth-card { max-width: 480px; margin: 10px auto; border: 1px solid rgba(16, 185, 129, 0.2); }
-        
+
         .tabs { display: flex; background: #0f172a; padding: 4px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #334155; gap: 4px; }
         .tab-btn { flex: 1; padding: 10px 6px; border: none; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer; border-radius: 9px; font-size: 11px; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: linear-gradient(135deg, #059669, #0d9488); color: #fff; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3); }
@@ -87,37 +102,6 @@
         .stat-card::before { content:''; position: absolute; top:0; left:0; width:4px; height:100%; background: #10b981; }
         .stat-num { font-size: 22px; font-weight: 800; margin-top: 4px; color: #34d399; }
 
-        /* Modal da Câmera Ajustado para Mobile */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 12px; z-index: 100; }
-        .modal { background: #1e293b; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; max-width: 380px; width: 100%; padding: 20px 16px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        
-        .camera-view { 
-            width: 100%; 
-            height: 260px; 
-            background: #000; 
-            border-radius: 14px; 
-            margin: 12px 0; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            position: relative; 
-            overflow: hidden; 
-            border: 2px solid #334155; 
-        }
-        .camera-view video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        
-        .face-frame {
-            position: absolute;
-            width: 160px;
-            height: 200px;
-            border: 2px dashed #34d399;
-            border-radius: 50%;
-            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.6);
-            pointer-events: none;
-        }
-        .scan-line { position: absolute; width: 100%; height: 2px; background: #34d399; box-shadow: 0 0 10px #34d399; animation: scan 2s infinite ease-in-out; }
-        @keyframes scan { 0% { top: 15%; } 50% { top: 85%; } 100% { top: 15%; } }
-
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; white-space: nowrap; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
@@ -127,6 +111,15 @@
     </style>
 </head>
 <body>
+
+    <!-- ABERTURA -->
+    <div id="splash" onclick="closeSplash()">
+        <div class="splash-logo"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+        <div class="splash-title">ROTA SEGURA</div>
+        <div class="splash-sub">Apoio & Saúde Mental no Trânsito</div>
+        <div class="splash-bar"><span></span></div>
+        <div class="splash-skip">Toque para pular</div>
+    </div>
 
     <header>
         <div class="logo-box" onclick="location.reload()">
@@ -216,7 +209,7 @@
                 </div>
 
                 <p style="font-size: 11px; color: #94a3b8; font-weight: 600;">Faça este exercício de respiração enquanto aguarda:</p>
-                
+
                 <div id="breathCircle" class="breath-box">Inspire (4s)</div>
 
                 <button type="button" onclick="location.reload()" class="btn btn-secondary">Voltar ao Início</button>
@@ -233,9 +226,8 @@
                     <input type="password" id="loginPass" required placeholder="••••••••">
                 </div>
                 <button type="submit" class="btn btn-primary">Entrar no Painel</button>
-                <button type="button" class="btn btn-secondary" onclick="openFacial('login')">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M9 3L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                    Entrar com Reconhecimento Facial
+                <button type="button" class="btn btn-secondary" onclick="loginBio()">
+                    🔓 Entrar com Face ID / Biometria
                 </button>
             </form>
 
@@ -275,10 +267,10 @@
 
                 <div class="facial-box">
                     <div>
-                        <div style="font-size: 11px; font-weight: 600;">Reconhecimento Facial</div>
-                        <div id="facialStatus" style="font-size: 10px; color: #f59e0b;">Pendente de captura</div>
+                        <div style="font-size: 11px; font-weight: 600;">Face ID / Biometria do aparelho</div>
+                        <div id="facialStatus" style="font-size: 10px; color: #f59e0b;">Pendente de ativação</div>
                     </div>
-                    <button type="button" onclick="openFacial('register')" style="background: #059669; color: white; border: none; padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;">Capturar Rosto</button>
+                    <button type="button" onclick="registerBio()" style="background: #059669; color: white; border: none; padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;">Ativar Face ID</button>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Cadastrar Agente</button>
@@ -321,29 +313,20 @@
         </div>
     </main>
 
-    <!-- MODAL DE RECONHECIMENTO FACIAL COM ATIVAÇÃO MOBILE DA CÂMERA -->
-    <div id="facialModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h3 style="font-size: 16px; font-weight: 800; color: #34d399;">Biometria Facial Rota Segura</h3>
-            <p style="font-size: 11px; color: #94a3b8; margin-top: 3px;">Enquadre o rosto na marcação abaixo</p>
-            
-            <div class="camera-view">
-                <video id="videoElem" autoplay playsinline muted webkit-playsinline></video>
-                <div class="face-frame"></div>
-                <div class="scan-line"></div>
-                <div id="cameraStatusText" style="position: absolute; bottom: 8px; font-size: 10px; background: rgba(0,0,0,0.8); color: #34d399; padding: 3px 10px; border-radius: 6px;">Solicitando permissão...</div>
-            </div>
-
-            <button class="btn btn-primary" onclick="confirmFacial()">Capturar e Validar Rosto</button>
-            <button class="btn btn-secondary" onclick="closeFacial()" style="border: none; color: #94a3b8;">Cancelar</button>
-        </div>
-    </div>
-
     <script>
-        let modeFacial = null;
         let breathInterval = null;
-        let activeStream = null;
+        let pendingBioId = null;
 
+        /* ===== ABERTURA ===== */
+        function closeSplash() {
+            const s = document.getElementById('splash');
+            if (!s || s.classList.contains('out')) return;
+            s.classList.add('out');
+            setTimeout(() => s.remove(), 700);
+        }
+        window.addEventListener('load', () => setTimeout(closeSplash, 3000));
+
+        /* ===== ABAS ===== */
         function setTab(tab) {
             document.getElementById('selfForm').classList.add('hidden');
             document.getElementById('loginForm').classList.add('hidden');
@@ -367,11 +350,12 @@
             }
         }
 
+        /* ===== AUTOATENDIMENTO ===== */
         function doSelfRegister(e) {
             e.preventDefault();
             const checkedBoxes = Array.from(document.querySelectorAll('input[name="symptom"]:checked')).map(c => c.value);
             const recs = JSON.parse(localStorage.getItem('rs_patients') || '[]');
-            
+
             recs.unshift({
                 time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
                 name: document.getElementById('selfName').value,
@@ -382,7 +366,7 @@
             });
 
             localStorage.setItem('rs_patients', JSON.stringify(recs));
-            
+
             document.getElementById('selfForm').classList.add('hidden');
             document.getElementById('selfHelpSuccess').classList.remove('hidden');
             startBreathCycle();
@@ -407,6 +391,7 @@
             }, 4000);
         }
 
+        /* ===== CADASTRO / LOGIN ===== */
         function doRegister(e) {
             e.preventDefault();
             const user = {
@@ -414,9 +399,11 @@
                 doc: document.getElementById('regDoc').value,
                 email: document.getElementById('regEmail').value,
                 pass: document.getElementById('regPass').value,
-                pointType: document.getElementById('regPointType').value
+                pointType: document.getElementById('regPointType').value,
+                bioId: pendingBioId
             };
             localStorage.setItem('rs_user_' + user.email, JSON.stringify(user));
+            pendingBioId = null;
             alert('Agente cadastrado com sucesso!');
             setTab('login');
         }
@@ -425,7 +412,7 @@
             e.preventDefault();
             const u = document.getElementById('loginUser').value;
             const p = document.getElementById('loginPass').value;
-            
+
             const saved = localStorage.getItem('rs_user_' + u);
             if (saved) {
                 const userObj = JSON.parse(saved);
@@ -452,55 +439,69 @@
             if (breathInterval) clearInterval(breathInterval);
         }
 
-        /* RECONHECIMENTO FACIAL MOBILE CORRIGIDO COM PERMISSÃO */
-        async function openFacial(mode) {
-            modeFacial = mode;
-            document.getElementById('facialModal').classList.remove('hidden');
-            const video = document.getElementById('videoElem');
-            const statusText = document.getElementById('cameraStatusText');
-            statusText.innerText = "Solicitando permissão da câmera...";
+        /* ===== FACE ID / BIOMETRIA (WebAuthn) ===== */
+        const rnd = n => crypto.getRandomValues(new Uint8Array(n));
+        const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const fromB64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 
-            // Tenta abrir a câmera frontal do smartphone
+        function bioSupported() {
+            if (!window.isSecureContext || !window.PublicKeyCredential) {
+                alert('Face ID exige o site em HTTPS e um navegador compatível (Safari ou Chrome atualizados).');
+                return false;
+            }
+            return true;
+        }
+
+        async function registerBio() {
+            if (!bioSupported()) return;
+            const email = document.getElementById('regEmail').value.trim();
+            const name = document.getElementById('regName').value.trim();
+            if (!email || !name) { alert('Preencha o nome e o e-mail antes de ativar o Face ID.'); return; }
             try {
-                const constraints = {
-                    video: {
-                        facingMode: { ideal: "user" },
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    },
-                    audio: false
-                };
-
-                activeStream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = activeStream;
-                await video.play();
-                statusText.innerText = "Câmera Ativa - Enquadre seu rosto";
-                statusText.style.color = "#34d399";
+                const cred = await navigator.credentials.create({ publicKey: {
+                    challenge: rnd(32),
+                    rp: { name: 'Rota Segura' },
+                    user: { id: rnd(16), name: email, displayName: name },
+                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+                    attestation: 'none',
+                    timeout: 60000
+                }});
+                pendingBioId = toB64(cred.rawId);
+                const st = document.getElementById('facialStatus');
+                st.innerText = 'Face ID ativado ✔';
+                st.style.color = '#34d399';
             } catch (err) {
-                console.error("Erro na câmera mobile:", err);
-                statusText.innerText = "Câmera indisponível (Simulação biométrica pronta)";
-                statusText.style.color = "#f59e0b";
+                console.error(err);
+                alert(err.name === 'NotAllowedError'
+                    ? 'Biometria cancelada ou não autorizada.'
+                    : 'Não foi possível ativar o Face ID neste aparelho. Verifique se ele está configurado nos ajustes do celular.');
             }
         }
 
-        function closeFacial() {
-            document.getElementById('facialModal').classList.add('hidden');
-            if (activeStream) {
-                activeStream.getTracks().forEach(track => track.stop());
-                activeStream = null;
+        async function loginBio() {
+            if (!bioSupported()) return;
+            const users = Object.keys(localStorage)
+                .filter(k => k.startsWith('rs_user_'))
+                .map(k => JSON.parse(localStorage.getItem(k)))
+                .filter(u => u.bioId);
+            if (!users.length) { alert('Nenhum agente com Face ID cadastrado neste aparelho. Cadastre primeiro na aba "Cadastrar Agente".'); return; }
+            try {
+                const cred = await navigator.credentials.get({ publicKey: {
+                    challenge: rnd(32),
+                    allowCredentials: users.map(u => ({ type: 'public-key', id: fromB64(u.bioId), transports: ['internal'] })),
+                    userVerification: 'required',
+                    timeout: 60000
+                }});
+                const id = toB64(cred.rawId);
+                showDashboard(users.find(u => u.bioId === id) || users[0]);
+            } catch (err) {
+                console.error(err);
+                alert(err.name === 'NotAllowedError' ? 'Biometria cancelada ou não reconhecida.' : 'Erro ao validar o Face ID.');
             }
         }
 
-        function confirmFacial() {
-            if (modeFacial === 'register') {
-                document.getElementById('facialStatus').innerText = "Capturado com Sucesso ✔";
-                document.getElementById('facialStatus').style.color = "#34d399";
-            } else {
-                showDashboard({ name: "Agente Biométrico", pointType: "Ponto Móvel - Trailer" });
-            }
-            closeFacial();
-        }
-
+        /* ===== PAINEL ===== */
         function loadRecords() {
             const recs = JSON.parse(localStorage.getItem('rs_patients') || '[]');
             const tbody = document.getElementById('recordsBody');
